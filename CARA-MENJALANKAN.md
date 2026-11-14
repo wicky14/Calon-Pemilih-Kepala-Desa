@@ -65,6 +65,7 @@ Hapus `/tmp/coba.db` setelah selesai.
 | `-addr` | `0.0.0.0:7777` | alamat:port. Pakai `127.0.0.1:7777` bila hanya untuk laptop sendiri |
 | `-db` | `data/app.db` | lokasi file database |
 | `-demo` | `false` | isi data contoh |
+| `-passwd` | — | ganti password satu akun lalu keluar (lihat bagian 8) |
 
 Contoh:
 
@@ -218,6 +219,32 @@ gpg --decrypt backup/app-20261114-210000.db.gpg > data/app.db
 
 ## 8. Kalau ada masalah
 
+**Lupa password / ingin mengganti password sendiri (tanpa login)**
+
+Tersedia dari terminal, langsung ke database. Aplikasi **boleh tetap
+berjalan**.
+
+```bash
+cd ~/Projects/webapp/data-collection
+./data-collection -passwd admin
+```
+
+- Ketik password baru (minimal 8 karakter). Ketikan **tidak tampil** di layar.
+- Diminta mengetik ulang untuk memastikan tidak salah.
+- Semua sesi login akun itu dicabut, jadi HP yang masih login harus masuk lagi.
+- Akun tidak dipaksa ganti password lagi setelah ini.
+- Bisa untuk akun timses juga: `./data-collection -passwd tim01`.
+- Perintah ini **hanya mengganti password**; server tidak dijalankan.
+
+Bila tidak ingin mengetik interaktif (mis. lewat skrip):
+
+```bash
+printf 'passwordpanjang\n' | ./data-collection -passwd admin
+```
+
+Catatan: setelah mengganti password, jalankan lagi `./data-collection`
+bila tadi aplikasi dihentikan.
+
 **Port 7777 sudah dipakai**
 
 ```bash
@@ -276,6 +303,7 @@ cd ~/Projects/webapp/data-collection
 
 ./data-collection                 # jalankan (port 7777)
 ./data-collection -demo           # uji coba dengan data contoh
+./data-collection -passwd admin   # ganti password akun (tanpa login)
 make build                        # build ulang
 ./deploy/backup.sh                # backup manual
 pgrep -af data-collection         # cek proses

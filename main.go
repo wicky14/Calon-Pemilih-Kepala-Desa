@@ -23,6 +23,7 @@ func main() {
 	addr := flag.String("addr", "0.0.0.0:7777", "alamat:port untuk listen (default semua antarmuka, port 7777)")
 	dbPath := flag.String("db", "data/app.db", "lokasi file database SQLite")
 	demo := flag.Bool("demo", false, "isi data contoh (hanya untuk uji coba)")
+	passwd := flag.String("passwd", "", "ganti password akun ini lalu keluar (tanpa menjalankan server)")
 	flag.Parse()
 
 	log.SetFlags(log.Ltime)
@@ -39,6 +40,14 @@ func main() {
 	}
 	defer st.Close()
 	_ = os.Chmod(*dbPath, 0o600)
+
+	// Mode pemulihan: ganti password satu akun lalu keluar.
+	if *passwd != "" {
+		if err := changePasswordCLI(st, *passwd); err != nil {
+			log.Fatalf("ganti password: %v", err)
+		}
+		return
+	}
 
 	if n, err := st.CountUsers(); err == nil && n == 0 {
 		pass := auth.RandomPassword()
