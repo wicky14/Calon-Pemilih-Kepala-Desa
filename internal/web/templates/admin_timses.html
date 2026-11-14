@@ -1,0 +1,81 @@
+{{define "content"}}
+{{if .NewPass}}
+<div class="alert ok">
+  <div>
+    <strong>Akun {{.NewUser}}</strong> · password: <code class="pw">{{.NewPass}}</code><br>
+    <span class="small">Catat dan berikan ke petugas sekarang. Password ini tidak ditampilkan lagi.</span>
+  </div>
+</div>
+{{end}}
+
+<details class="card">
+  <summary class="summary">{{icon "plus"}}<span>Tambah timses</span></summary>
+  <form method="post" action="/admin/timses" class="form">
+    {{template "csrf" .}}
+    <label>Nama timses
+      <input name="nama" required maxlength="60" placeholder="Contoh: Timses 01 — RW 02" autocomplete="off">
+    </label>
+    <label>Kuota data
+      <input name="kuota" inputmode="numeric" maxlength="4" placeholder="Kosongkan = {{.DefaultKuota}}" class="mono">
+      <span class="hint">Boleh berbeda tiap timses. Maksimal 1000.</span>
+    </label>
+    <div class="grid2">
+      <label>Username
+        <input name="username" maxlength="40" placeholder="otomatis: tim01" autocapitalize="none" autocomplete="off" class="mono">
+      </label>
+      <label>Password
+        <input name="password" maxlength="72" placeholder="kosongkan = otomatis" autocomplete="off">
+      </label>
+    </div>
+    <button class="btn primary" type="submit">{{icon "check"}} Buat timses + akun</button>
+  </form>
+</details>
+
+<h2 class="h2 mt24">Daftar timses</h2>
+
+<div class="vlist mt8">
+{{range .Rows}}
+<div class="card">
+  <div class="row between">
+    <div>
+      <div class="vname">{{.Nama}}</div>
+      <div class="muted small">{{.Terisi}} / {{.KuotaEfektif}} data · {{.Persen}}%</div>
+    </div>
+    <div class="row gap-sm">
+      <a class="btn ghost sm" href="/admin/data?timses={{.ID}}">Lihat data</a>
+      <a class="btn ghost sm" href="/export.csv?timses={{.ID}}">{{icon "download"}}</a>
+    </div>
+  </div>
+  <div class="bar mt8"><span style="width:{{.Persen}}%"></span></div>
+
+  <form method="post" action="/admin/timses/{{.ID}}" class="form mt16 compact">
+    {{template "csrf" $}}
+    <div class="grid3">
+      <label>Nama
+        <input name="nama" value="{{.Nama}}" required maxlength="60">
+      </label>
+      <label>Kuota
+        <input name="kuota" value="{{if .Kuota.Valid}}{{.Kuota.Int64}}{{end}}" inputmode="numeric" maxlength="4" placeholder="{{$.DefaultKuota}}" class="mono">
+      </label>
+      <label class="checkline">
+        <input type="checkbox" name="aktif" value="1"{{if .Aktif}} checked{{end}}>
+        <span>Aktif</span>
+      </label>
+    </div>
+    <div class="row gap">
+      <button class="btn primary sm" type="submit">Simpan</button>
+    </div>
+  </form>
+
+  <form method="post" action="/admin/timses/{{.ID}}/delete" class="inline mt8" data-confirm="Hapus timses {{.Nama}} beserta akunnya?">
+    {{template "csrf" $}}
+    <button class="btn danger ghost sm" type="submit">{{icon "trash"}} Hapus timses</button>
+  </form>
+</div>
+{{else}}
+<div class="empty">{{icon "users"}}<p>Belum ada timses.</p></div>
+{{end}}
+</div>
+
+<p class="muted small mt24">Menonaktifkan timses langsung memutus sesi login anggotanya. Kuota baru berlaku untuk data berikutnya.</p>
+{{end}}

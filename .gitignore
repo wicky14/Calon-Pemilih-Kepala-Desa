@@ -1,0 +1,32 @@
+# Binary hasil build
+/data-collection
+*.exe
+
+# Database & berkas sementara SQLite
+data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.db.bak
+
+# Backup (memuat data pribadi, jangan pernah di-commit)
+backup/
+*.gpg
+
+# Log
+*.log
+
+# Build/test
+coverage.out
+*.test
+*.prof
+dist/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db

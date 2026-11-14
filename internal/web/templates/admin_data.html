@@ -1,0 +1,86 @@
+{{define "content"}}
+<form method="get" action="/admin/data" class="card filter">
+  <div class="grid2">
+    <label>Timses
+      <select name="timses" onchange="this.form.submit()">
+        <option value="">Semua timses</option>
+        {{range .TimsesList}}<option value="{{.ID}}"{{if eq .ID $.Filter}} selected{{end}}>{{.Nama}}</option>{{end}}
+      </select>
+    </label>
+    <label>Cari
+      <input name="q" value="{{.Query}}" placeholder="Nama atau NIK" autocomplete="off">
+    </label>
+  </div>
+  <div class="row gap-sm mt8">
+    <button class="btn primary sm" type="submit">{{icon "search"}} Cari</button>
+    <a class="btn ghost sm" href="/export.csv{{if .Filter}}?timses={{.Filter}}{{end}}">{{icon "download"}} Export CSV</a>
+  </div>
+</form>
+
+{{if .Editing}}
+<details class="card" open>
+  <summary class="summary">{{icon "edit"}}<span>Ubah data</span></summary>
+  <form method="post" action="{{.Action}}" class="form">
+    {{template "csrf" .}}
+    <label>Nama lengkap
+      <input name="nama" value="{{.Form.Nama}}" maxlength="100" required autocomplete="off">
+      {{if .Errs.Nama}}<span class="ferr">{{.Errs.Nama}}</span>{{end}}
+    </label>
+    <label>NIK (16 angka)
+      <input name="nik" value="{{.Form.NIK}}" inputmode="numeric" pattern="[0-9]{16}" maxlength="16" required class="mono">
+      {{if .Errs.NIK}}<span class="ferr">{{.Errs.NIK}}</span>{{end}}
+    </label>
+    <label>Dusun
+      <select name="dusun" required>
+        <option value="">— pilih dusun —</option>
+        {{range .Dusun}}<option value="{{.Nama}}"{{if eq .Nama $.Form.Dusun}} selected{{end}}>{{.Nama}}</option>{{end}}
+      </select>
+      {{if .Errs.Dusun}}<span class="ferr">{{.Errs.Dusun}}</span>{{end}}
+    </label>
+    <div class="grid2">
+      <label>No. RT
+        <input name="rt" value="{{.Form.RT}}" inputmode="numeric" maxlength="3" pattern="[0-9]{1,3}" required class="mono">
+        {{if .Errs.RT}}<span class="ferr">{{.Errs.RT}}</span>{{end}}
+      </label>
+      <label>No. RW
+        <input name="rw" value="{{.Form.RW}}" inputmode="numeric" maxlength="3" pattern="[0-9]{1,3}" required class="mono">
+        {{if .Errs.RW}}<span class="ferr">{{.Errs.RW}}</span>{{end}}
+      </label>
+    </div>
+    <div class="row gap">
+      <button class="btn primary grow" type="submit">Simpan perubahan</button>
+      <a class="btn ghost" href="/admin/data{{if .Filter}}?timses={{.Filter}}{{end}}">Batal</a>
+    </div>
+  </form>
+</details>
+{{end}}
+
+<div class="row between mt16">
+  <h2 class="h2">{{.Total}} data</h2>
+  {{if .Filter}}<a class="link small" href="/admin/data">Tampilkan semua</a>{{end}}
+</div>
+
+{{if .Voters}}
+<div class="vlist mt8">
+  {{range .Voters}}
+  <div class="vrow">
+    <div class="vno">{{.NoUrut}}</div>
+    <div class="vmain">
+      <div class="vname">{{.Nama}}</div>
+      <div class="vnik mono">{{maskNIK .NIK}}</div>
+      <div class="vmeta">{{.TimsesNama}} · {{.Dusun}} · RT {{.RT}} / RW {{.RW}}</div>
+    </div>
+    <div class="vact">
+      <a class="iconbtn" href="/admin/data?edit={{.ID}}{{if $.Filter}}&amp;timses={{$.Filter}}{{end}}" title="Ubah">{{icon "edit"}}</a>
+      <form method="post" action="/admin/data/{{.ID}}/delete" class="inline" data-confirm="Hapus data {{.Nama}}?">
+        {{template "csrf" $}}
+        <button class="iconbtn danger" type="submit" title="Hapus">{{icon "trash"}}</button>
+      </form>
+    </div>
+  </div>
+  {{end}}
+</div>
+{{else}}
+<div class="empty">{{icon "search"}}<p>Tidak ada data{{if .Query}} untuk “{{.Query}}”{{end}}.</p></div>
+{{end}}
+{{end}}

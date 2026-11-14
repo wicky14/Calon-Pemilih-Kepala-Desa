@@ -1,0 +1,9 @@
+{{define "content"}}
+<div class="card center">
+  <div class="empty">{{icon "lock"}}<p>{{.Message}}</p></div>
+  <div class="row gap center-x">
+    {{if .User}}<a class="btn primary" href="{{if eq .User.Role "admin"}}/admin{{else}}/{{end}}">Kembali</a>{{end}}
+    {{if not .User}}<a class="btn primary" href="/login">Masuk</a>{{end}}
+  </div>
+</div>
+{{end}}

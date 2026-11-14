@@ -1,0 +1,38 @@
+{{define "content"}}
+<div class="card">
+  <h2 class="h2 mt0">Sidik jari data</h2>
+  <p class="muted small">
+    Aplikasi menghitung SHA-256 dari seluruh data pemilih. Setiap catatan dirantai ke catatan sebelumnya,
+    sehingga perubahan atau penghapusan data di belakang layar akan membuat hash berikutnya tidak cocok.
+    Catat atau kirim hash ini ke pihak lain setiap hari sebagai bukti.
+  </p>
+  <div class="row between">
+    <div>
+      <div class="muted small">Jumlah data saat ini</div>
+      <div class="bignum">{{.JumlahVoter}}</div>
+    </div>
+    <form method="post" action="/admin/integritas">
+      {{template "csrf" .}}
+      <button class="btn primary" type="submit">{{icon "shield"}} Catat sekarang</button>
+    </form>
+  </div>
+</div>
+
+<h2 class="h2 mt24">Riwayat sidik jari</h2>
+<div class="vlist mt8">
+  {{range .Entries}}
+  <div class="card">
+    <div class="row between">
+      <div>
+        <div class="vname">{{tanggal .At}}</div>
+        <div class="muted small">{{.Jumlah}} data · oleh {{.Oleh}}</div>
+      </div>
+      <span class="badge neutral">#{{.ID}}</span>
+    </div>
+    <div class="hash mono">{{.Hash}}</div>
+  </div>
+  {{else}}
+  <div class="empty">{{icon "shield"}}<p>Belum ada catatan. Tekan “Catat sekarang” untuk membuat catatan pertama.</p></div>
+  {{end}}
+</div>
+{{end}}

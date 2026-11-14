@@ -1,0 +1,55 @@
+{{define "content"}}
+<form method="post" action="/admin/pengaturan" class="card">
+  {{template "csrf" .}}
+  <h2 class="h2 mt0">Umum</h2>
+  <div class="grid2">
+    <label>Nama desa
+      <input name="nama_desa" value="{{.NamaDesa}}" required maxlength="80">
+    </label>
+    <label>Kuota default per timses
+      <input name="default_kuota" value="{{.DefaultKuota}}" inputmode="numeric" maxlength="4" required class="mono">
+    </label>
+  </div>
+  <button class="btn primary mt8" type="submit">Simpan pengaturan</button>
+</form>
+
+<div class="card mt16">
+  <h2 class="h2 mt0">Dusun</h2>
+  <p class="muted small">Daftar pilihan dusun pada form input. Data yang sudah ada tidak terpengaruh bila dusun dihapus.</p>
+  <div class="vlist">
+    {{range .Dusun}}
+    <div class="row between dusunrow">
+      <span>{{.Nama}}</span>
+      <form method="post" action="/admin/dusun/{{.ID}}/delete" class="inline" data-confirm="Hapus dusun {{.Nama}} dari daftar?">
+        {{template "csrf" $}}
+        <button class="iconbtn danger" type="submit" title="Hapus">{{icon "trash"}}</button>
+      </form>
+    </div>
+    {{else}}
+    <div class="muted small">Belum ada dusun. Tambahkan minimal satu.</div>
+    {{end}}
+  </div>
+  <form method="post" action="/admin/dusun" class="row gap-sm mt16">
+    {{template "csrf" .}}
+    <input name="nama" required maxlength="60" placeholder="Nama dusun baru" class="grow" autocomplete="off">
+    <button class="btn primary sm" type="submit">{{icon "plus"}} Tambah</button>
+  </form>
+</div>
+
+<div class="card mt16">
+  <h2 class="h2 mt0">Kunci data</h2>
+  {{if .Locked}}
+  <p class="muted small">Data sedang <strong>terkunci</strong>. Timses tidak bisa menambah, mengubah, atau menghapus data. Admin tetap bisa mengoreksi lewat menu Data.</p>
+  <form method="post" action="/admin/kunci">
+    {{template "csrf" .}}
+    <button class="btn primary" type="submit">{{icon "unlock"}} Buka kunci data</button>
+  </form>
+  {{else}}
+  <p class="muted small">Kunci data setelah pendataan selesai. Ini mencegah perubahan tak sengaja maupun disengaja sebelum rekap final.</p>
+  <form method="post" action="/admin/kunci" data-confirm="Kunci semua data? Timses tidak bisa mengubah data lagi.">
+    {{template "csrf" .}}
+    <button class="btn danger" type="submit">{{icon "lock"}} Kunci semua data</button>
+  </form>
+  {{end}}
+</div>
+{{end}}

@@ -1,0 +1,46 @@
+{{define "content"}}
+<section class="statgrid">
+  <div class="card stat"><div class="muted small">Data terkumpul</div><div class="bignum">{{.Total}}</div></div>
+  <div class="card stat"><div class="muted small">Kuota total</div><div class="bignum">{{.TotalKuota}}</div></div>
+  <div class="card stat"><div class="muted small">Timses</div><div class="bignum">{{len .Rows}}</div></div>
+</section>
+
+<div class="row between mt24">
+  <h2 class="h2">Progres per timses</h2>
+  <a class="btn ghost sm" href="/export.csv">{{icon "download"}} Export semua</a>
+</div>
+
+<div class="vlist mt8">
+{{range .Rows}}
+  <a class="card trow" href="/admin/data?timses={{.ID}}">
+    <div class="row between">
+      <div class="grow">
+        <div class="vname">{{.Nama}}</div>
+        <div class="muted small">{{.Terisi}} / {{.KuotaEfektif}} data</div>
+      </div>
+      <div>
+        {{if not .Aktif}}<span class="badge warn">Nonaktif</span>
+        {{else if ge .Persen 100}}<span class="badge danger">Penuh</span>
+        {{else}}<span class="badge ok">{{.Persen}}%</span>{{end}}
+      </div>
+    </div>
+    <div class="bar mt8"><span style="width:{{.Persen}}%"></span></div>
+  </a>
+{{else}}
+  <div class="empty">{{icon "users"}}<p>Belum ada timses. Tambahkan di menu Timses.</p></div>
+{{end}}
+</div>
+
+<h2 class="h2 mt24">Aktivitas terakhir</h2>
+<div class="card list-flat">
+{{range .Audit}}
+  <div class="actrow">
+    <span class="tag {{.Aksi}}">{{.Aksi}}</span>
+    <span class="small grow">{{potong .Ringkas 70}}</span>
+    <span class="muted small nowrap">{{.Username}}</span>
+  </div>
+{{else}}
+  <div class="muted small">Belum ada aktivitas.</div>
+{{end}}
+</div>
+{{end}}

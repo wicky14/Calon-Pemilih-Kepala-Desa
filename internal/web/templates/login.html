@@ -1,0 +1,17 @@
+{{define "content"}}
+<div class="logincard card">
+  <div class="loginmark">{{icon "users"}}</div>
+  <h1 class="h1">Pendataan Pemilih</h1>
+  <p class="muted center mt0">{{.NamaDesa}}</p>
+  <form method="post" action="/login" class="form mt24">
+    <label>Username
+      <input name="username" value="{{.Username}}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" required autofocus>
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button class="btn primary block" type="submit">Masuk</button>
+  </form>
+  <p class="muted small center mt16">Akun dibuat oleh admin desa. Hubungi admin bila lupa password.</p>
+</div>
+{{end}}

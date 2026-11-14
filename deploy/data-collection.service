@@ -1,0 +1,17 @@
+[Unit]
+Description=Pendataan Pemilih Kepala Desa
+Documentation=file://%h/Projects/webapp/data-collection/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/webapp/data-collection
+ExecStart=%h/Projects/webapp/data-collection/data-collection -addr 0.0.0.0:7777 -db %h/Projects/webapp/data-collection/data/app.db
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,7 @@
+[Unit]
+Description=Backup harian database Pendataan Pemilih
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/Projects/webapp/data-collection
+ExecStart=%h/Projects/webapp/data-collection/deploy/backup.sh

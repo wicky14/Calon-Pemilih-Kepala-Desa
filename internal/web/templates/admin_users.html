@@ -1,0 +1,84 @@
+{{define "content"}}
+{{if .NewPass}}
+<div class="alert ok">
+  <div>
+    <strong>Akun {{.NewUser}}</strong> · password: <code class="pw">{{.NewPass}}</code><br>
+    <span class="small">Catat sekarang. Password ini tidak ditampilkan lagi. Pengguna diminta menggantinya saat login.</span>
+  </div>
+</div>
+{{end}}
+
+<details class="card">
+  <summary class="summary">{{icon "plus"}}<span>Tambah akun</span></summary>
+  <form method="post" action="/admin/users" class="form">
+    {{template "csrf" .}}
+    <div class="grid2">
+      <label>Username
+        <input name="username" required maxlength="40" autocapitalize="none" autocomplete="off" class="mono" placeholder="tanpa spasi">
+      </label>
+      <label>Password
+        <input name="password" maxlength="72" autocomplete="off" placeholder="kosongkan = otomatis">
+      </label>
+    </div>
+    <div class="grid2">
+      <label>Peran
+        <select name="role">
+          <option value="timses">Timses (input data)</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
+      <label>Timses
+        <select name="timses_id">
+          <option value="">— untuk admin, boleh kosong —</option>
+          {{range .TimsesList}}<option value="{{.ID}}">{{.Nama}}</option>{{end}}
+        </select>
+      </label>
+    </div>
+    <button class="btn primary" type="submit">{{icon "check"}} Buat akun</button>
+  </form>
+</details>
+
+<h2 class="h2 mt24">Daftar akun</h2>
+
+<div class="vlist mt8">
+{{range .Users}}
+<div class="card">
+  <div class="row between">
+    <div class="grow">
+      <div class="vname">{{.Username}}{{if eq .ID $.SelfID}} <span class="badge ok">Anda</span>{{end}}</div>
+      <div class="muted small">
+        {{if eq .Role "admin"}}Admin{{else}}Timses · {{.TimsesNama}}{{end}}
+        {{if not .Aktif}} · <span class="badge warn">Nonaktif</span>{{end}}
+        {{if .MustChange}} · <span class="badge neutral">Belum ganti password</span>{{end}}
+      </div>
+    </div>
+  </div>
+
+  <div class="row gap-sm mt8 wrap">
+    <form method="post" action="/admin/users/{{.ID}}/reset" class="inline" data-confirm="Buat password baru untuk {{.Username}}?">
+      {{template "csrf" $}}
+      <button class="btn ghost sm" type="submit">{{icon "key"}} Reset password</button>
+    </form>
+    <form method="post" action="/admin/users/{{.ID}}/toggle" class="inline">
+      {{template "csrf" $}}
+      <button class="btn ghost sm" type="submit">{{if .Aktif}}Nonaktifkan{{else}}Aktifkan{{end}}</button>
+    </form>
+    <form method="post" action="/admin/users/{{.ID}}/logout" class="inline">
+      {{template "csrf" $}}
+      <button class="btn ghost sm" type="submit">{{icon "logout"}} Cabut sesi</button>
+    </form>
+    {{if ne .ID $.SelfID}}
+    <form method="post" action="/admin/users/{{.ID}}/delete" class="inline" data-confirm="Hapus akun {{.Username}}?">
+      {{template "csrf" $}}
+      <button class="btn danger ghost sm" type="submit">{{icon "trash"}} Hapus</button>
+    </form>
+    {{end}}
+  </div>
+</div>
+{{else}}
+<div class="empty">{{icon "user"}}<p>Belum ada akun.</p></div>
+{{end}}
+</div>
+
+<p class="muted small mt24">Reset password otomatis memutus semua sesi akun tersebut. Akun nonaktif tidak bisa login.</p>
+{{end}}

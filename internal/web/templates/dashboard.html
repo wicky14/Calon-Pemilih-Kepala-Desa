@@ -1,0 +1,99 @@
+{{define "content"}}
+<section class="card progress-card">
+  <div class="row between">
+    <div>
+      <div class="muted small">Data terisi</div>
+      <div class="bignum">{{.Terisi}}<span class="muted"> / {{.Kuota}}</span></div>
+    </div>
+    <div class="center">
+      {{if .Locked}}<span class="badge warn">Terkunci</span>
+      {{else if .Penuh}}<span class="badge danger">Kuota penuh</span>
+      {{else}}<span class="badge ok">Sisa {{.Sisa}}</span>{{end}}
+      <div class="muted small mt8"><a class="link" href="/export.csv">{{icon "download"}} CSV</a></div>
+    </div>
+  </div>
+  <div class="bar"><span style="width:{{.Persen}}%"></span></div>
+</section>
+
+{{if .Locked}}
+<div class="alert warn-box">{{icon "lock"}}<span>Data sudah dikunci admin. Penambahan dan perubahan data dinonaktifkan. Hubungi admin bila ada koreksi.</span></div>
+{{else}}
+<details class="card" id="form" {{if .FormOpen}}open{{end}}>
+  <summary class="summary">
+    {{icon "plus"}}<span>{{if .Editing}}Ubah data pemilih{{else}}Tambah data pemilih{{end}}</span>
+  </summary>
+  <form method="post" action="{{.Action}}" class="form">
+    {{template "csrf" .}}
+    <label>Nama lengkap
+      <input name="nama" value="{{.Form.Nama}}" maxlength="100" required autocomplete="off" placeholder="Sesuai KTP">
+      {{if .Errs.Nama}}<span class="ferr">{{.Errs.Nama}}</span>{{end}}
+    </label>
+    <label>NIK (16 angka)
+      <input name="nik" value="{{.Form.NIK}}" inputmode="numeric" pattern="[0-9]{16}" maxlength="16" required autocomplete="off" placeholder="Contoh: 3507123456780001" class="mono">
+      {{if .Errs.NIK}}<span class="ferr">{{.Errs.NIK}}</span>{{end}}
+    </label>
+    <label>Dusun
+      <select name="dusun" required>
+        <option value="">— pilih dusun —</option>
+        {{range .Dusun}}<option value="{{.Nama}}"{{if eq .Nama $.Form.Dusun}} selected{{end}}>{{.Nama}}</option>{{end}}
+      </select>
+      {{if .Errs.Dusun}}<span class="ferr">{{.Errs.Dusun}}</span>{{end}}
+    </label>
+    <div class="grid2">
+      <label>No. RT
+        <input name="rt" value="{{.Form.RT}}" inputmode="numeric" maxlength="3" pattern="[0-9]{1,3}" required placeholder="001" class="mono">
+        {{if .Errs.RT}}<span class="ferr">{{.Errs.RT}}</span>{{end}}
+      </label>
+      <label>No. RW
+        <input name="rw" value="{{.Form.RW}}" inputmode="numeric" maxlength="3" pattern="[0-9]{1,3}" required placeholder="002" class="mono">
+        {{if .Errs.RW}}<span class="ferr">{{.Errs.RW}}</span>{{end}}
+      </label>
+    </div>
+    <div class="row gap">
+      <button class="btn primary grow" type="submit">{{icon "check"}} {{.Label}}</button>
+      {{if .Editing}}<a class="btn ghost" href="/">Batal</a>{{end}}
+    </div>
+  </form>
+</details>
+{{end}}
+
+<form method="get" action="/" class="search">
+  {{icon "search"}}
+  <input name="q" value="{{.Query}}" placeholder="Cari nama atau NIK" autocomplete="off" inputmode="search">
+  {{if .Query}}<a class="search-clear" href="/" title="Hapus pencarian">×</a>{{end}}
+</form>
+
+{{if .Voters}}
+<div class="vlist">
+  {{range .Voters}}
+  <div class="vrow">
+    <div class="vno">{{.NoUrut}}</div>
+    <div class="vmain">
+      <div class="vname">{{.Nama}}</div>
+      <div class="vnik mono">{{maskNIK .NIK}}</div>
+      <div class="vmeta">{{.Dusun}} · RT {{.RT}} / RW {{.RW}}</div>
+    </div>
+    {{if not $.Locked}}
+    <div class="vact">
+      <a class="iconbtn" href="/?edit={{.ID}}{{if $.Query}}&amp;q={{$.Query}}{{end}}" title="Ubah">{{icon "edit"}}</a>
+      <form method="post" action="/voters/{{.ID}}/delete" class="inline" data-confirm="Hapus data {{.Nama}}?">
+        {{template "csrf" $}}
+        <button class="iconbtn danger" type="submit" title="Hapus">{{icon "trash"}}</button>
+      </form>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+</div>
+{{else if .Query}}
+<div class="empty">{{icon "search"}}<p>Tidak ada data yang cocok dengan “{{.Query}}”.</p></div>
+{{else}}
+<div class="empty">{{icon "users"}}<p>Belum ada data. Mulai dengan menambah data pemilih pertama.</p></div>
+{{end}}
+
+{{if not .Locked}}
+<div class="stickybar">
+  <a class="btn primary block" href="#form" onclick="var f=document.getElementById('form'); if(f){f.open=true; f.scrollIntoView({behavior:'smooth'});}">{{icon "plus"}} Tambah data</a>
+</div>
+{{end}}
+{{end}}

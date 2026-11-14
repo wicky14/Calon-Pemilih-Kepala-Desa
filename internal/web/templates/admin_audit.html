@@ -1,0 +1,16 @@
+{{define "content"}}
+<div class="card list-flat">
+  {{range .Entries}}
+  <div class="audrow">
+    <div class="row between">
+      <span class="tag {{.Aksi}}">{{.Aksi}}</span>
+      <span class="muted small">{{tanggal .At}} · {{.Username}}</span>
+    </div>
+    <div class="small mt4">{{.Ringkas}}</div>
+  </div>
+  {{else}}
+  <div class="muted small">Belum ada aktivitas.</div>
+  {{end}}
+</div>
+<p class="muted small mt16">Riwayat mencatat penambahan, perubahan, dan penghapusan data pemilih beserta pelakunya. Entri tidak bisa dihapus dari aplikasi.</p>
+{{end}}

@@ -1,0 +1,47 @@
+{{define "layout"}}<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="robots" content="noindex, nofollow">
+<title>{{.Title}} · Pendataan Pemilih</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/static/icon.svg">
+</head>
+<body>
+{{if .User}}
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-title">Pendataan Pemilih</span>
+      <span class="brand-sub">{{if eq .User.Role "admin"}}Admin · {{.NamaDesa}}{{else}}{{.User.TimsesNama}} · {{.NamaDesa}}{{end}}</span>
+    </div>
+    <div class="topbar-actions">
+      <a class="iconbtn" href="/password" title="Ganti password">{{icon "key"}}</a>
+      <form method="post" action="/logout" class="inline">
+        {{template "csrf" .}}
+        <button class="iconbtn" type="submit" title="Keluar">{{icon "logout"}}</button>
+      </form>
+    </div>
+  </div>
+  {{if .AdminNav}}{{template "adminnav" .}}{{end}}
+</header>
+{{end}}
+<main class="wrap{{if not .User}} center-page{{end}}">
+{{if .OK}}<div class="alert ok">{{icon "check"}}<span>{{.OK}}</span></div>{{end}}
+{{if .Err}}<div class="alert err"><span>{{.Err}}</span></div>{{end}}
+{{template "content" .}}
+</main>
+<script>
+document.addEventListener('submit', function (e) {
+  var f = e.target;
+  if (f.dataset && f.dataset.confirm && !window.confirm(f.dataset.confirm)) {
+    e.preventDefault();
+  }
+});
+</script>
+</body>
+</html>{{end}}

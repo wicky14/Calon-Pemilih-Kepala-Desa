@@ -1,0 +1,17 @@
+{{define "csrf"}}<input type="hidden" name="csrf" value="{{.CSRF}}">{{end}}
+
+{{define "adminnav"}}
+<nav class="adminnav">
+  <a href="/admin" class="{{if eq .Path "/admin"}}on{{end}}">{{icon "list"}}<span>Dashboard</span></a>
+  <a href="/admin/timses" class="{{if eq .Path "/admin/timses"}}on{{end}}">{{icon "users"}}<span>Timses</span></a>
+  <a href="/admin/users" class="{{if eq .Path "/admin/users"}}on{{end}}">{{icon "user"}}<span>Akun</span></a>
+  <a href="/admin/data" class="{{if eq .Path "/admin/data"}}on{{end}}">{{icon "search"}}<span>Data</span></a>
+  <a href="/admin/pengaturan" class="{{if eq .Path "/admin/pengaturan"}}on{{end}}">{{icon "gear"}}<span>Atur</span></a>
+  <a href="/admin/integritas" class="{{if eq .Path "/admin/integritas"}}on{{end}}">{{icon "shield"}}<span>Integritas</span></a>
+  <a href="/admin/audit" class="{{if eq .Path "/admin/audit"}}on{{end}}">{{icon "key"}}<span>Riwayat</span></a>
+</nav>
+{{end}}
+
+{{define "progressbar"}}
+<div class="bar"><span style="width:{{.Persen}}%"></span></div>
+{{end}}
