@@ -1,6 +1,6 @@
 BINARY = data-collection
 
-.PHONY: build run demo backup clean
+.PHONY: build run demo backup clean service
 
 build:
 	go build -o $(BINARY) .
@@ -10,6 +10,9 @@ run: build
 
 demo: build
 	./$(BINARY) -demo -db /tmp/pendataan-demo.db
+
+service:
+	./deploy/install-service.sh
 
 backup:
 	./deploy/backup.sh

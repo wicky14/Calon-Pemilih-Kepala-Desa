@@ -132,25 +132,56 @@ sudo systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.
 
 ## 5. Jalankan otomatis saat boot (systemd user)
 
+**Satu perintah** (sekali saja, tanpa sudo):
+
 ```bash
-mkdir -p ~/.config/systemd/user
-cp ~/Projects/webapp/data-collection/deploy/data-collection.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now data-collection
-loginctl enable-linger "$USER"     # tetap jalan walau belum login
+cd ~/Projects/webapp/data-collection
+./deploy/install-service.sh
 ```
+
+Atau lewat Makefile:
+
+```bash
+make service
+```
+
+Yang dilakukan skrip itu:
+
+1. Membangun binary bila belum ada.
+2. Menghentikan proses `./data-collection` yang dijalankan manual (agar port 7777 bebas).
+3. Menulis unit systemd user sesuai lokasi folder proyek ini.
+4. `enable --now` → langsung jalan dan otomatis hidup setiap login.
+5. `enable-linger` → tetap jalan walau sesi login ditutup.
+6. Menunggu aplikasi siap, lalu menampilkan status dan alamat akses.
+
+Aman dijalankan berulang kali; kalau layanan sudah aktif, skrip hanya me-restart.
 
 Perintah sehari-hari:
 
 ```bash
 systemctl --user status data-collection     # cek status
-systemctl --user restart data-collection    # restart
+systemctl --user restart data-collection    # restart (mis. setelah build ulang)
 systemctl --user stop data-collection       # hentikan
 journalctl --user -u data-collection -f     # lihat log langsung
 ```
 
-> Bila folder proyek bukan `~/Projects/webapp/data-collection`, sesuaikan
-> `WorkingDirectory` dan `ExecStart` di file service.
+Ingin alamat atau database lain?
+
+```bash
+ADDR=127.0.0.1:7777 DB=/home/omakid/data-desa/app.db ./deploy/install-service.sh
+```
+
+Mematikan layanan sepenuhnya (tidak lagi otomatis saat login):
+
+```bash
+systemctl --user disable --now data-collection
+rm -f ~/.config/systemd/user/data-collection.service
+systemctl --user daemon-reload
+```
+
+> File `deploy/data-collection.service` hanya contoh/template. Skrip installer
+> selalu membuat unit baru dengan path yang benar, jadi tidak perlu menyalin
+> atau mengedit apa pun secara manual.
 
 ---
 
@@ -304,6 +335,7 @@ cd ~/Projects/webapp/data-collection
 ./data-collection                 # jalankan (port 7777)
 ./data-collection -demo           # uji coba dengan data contoh
 ./data-collection -passwd admin   # ganti password akun (tanpa login)
+make service                      # pasang + jalankan sebagai layanan
 make build                        # build ulang
 ./deploy/backup.sh                # backup manual
 pgrep -af data-collection         # cek proses

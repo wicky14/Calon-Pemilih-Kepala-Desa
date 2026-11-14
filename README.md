@@ -102,17 +102,23 @@ Yang sudah diterapkan:
 
 ## Pasang sebagai layanan (systemd, user)
 
+Satu perintah — membangun binary bila perlu, menyiapkan unit, mengaktifkan
+saat login, dan langsung menjalankan:
+
 ```bash
-mkdir -p ~/.config/systemd/user
-cp deploy/data-collection.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now data-collection
-systemctl --user status data-collection
-loginctl enable-linger "$USER"   # agar tetap jalan tanpa login
+./deploy/install-service.sh      # atau: make service
 ```
 
-Sesuaikan `WorkingDirectory`/`ExecStart` bila folder proyek bukan
-`~/Projects/webapp/data-collection`.
+Aman dijalankan berulang kali. Perintah harian:
+
+```bash
+systemctl --user status data-collection
+systemctl --user restart data-collection
+journalctl --user -u data-collection -f
+```
+
+Installer menulis unit sesuai lokasi folder proyek, jadi tidak perlu
+menyesuaikan `WorkingDirectory`/`ExecStart` secara manual.
 
 ## Backup harian
 
