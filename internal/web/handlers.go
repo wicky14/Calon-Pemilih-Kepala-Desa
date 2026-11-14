@@ -629,12 +629,11 @@ func (s *Server) adminDash(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Server) adminTimses(w http.ResponseWriter, r *http.Request) {
+func (s *Server) adminTimsesPage(r *http.Request) (*AdminTimsesPage, error) {
 	cfg := s.st.Config()
 	list, err := s.st.ListTimses()
 	if err != nil {
-		s.fail(w, r, http.StatusInternalServerError, "Gagal memuat data.")
-		return
+		return nil, err
 	}
 	rows := make([]TimsesRow, 0, len(list))
 	for _, t := range list {
@@ -643,10 +642,27 @@ func (s *Server) adminTimses(w http.ResponseWriter, r *http.Request) {
 	}
 	b := s.base(r)
 	b.Title = "Timses"
-	s.render(w, r, "admin_timses", http.StatusOK, AdminTimsesPage{
-		Base: b, Rows: rows, DefaultKuota: cfg.DefaultKuota,
-		NewUser: r.URL.Query().Get("nu"), NewPass: r.URL.Query().Get("pw"),
-	})
+	return &AdminTimsesPage{Base: b, Rows: rows, DefaultKuota: cfg.DefaultKuota}, nil
+}
+
+func (s *Server) adminTimses(w http.ResponseWriter, r *http.Request) {
+	p, err := s.adminTimsesPage(r)
+	if err != nil {
+		s.fail(w, r, http.StatusInternalServerError, "Gagal memuat data.")
+		return
+	}
+	s.render(w, r, "admin_timses", http.StatusOK, p)
+}
+
+func (s *Server) renderTimses(w http.ResponseWriter, r *http.Request, newUser, newPass, okMsg string) {
+	p, err := s.adminTimsesPage(r)
+	if err != nil {
+		s.fail(w, r, http.StatusInternalServerError, "Gagal memuat data.")
+		return
+	}
+	p.NewUser, p.NewPass = newUser, newPass
+	p.OK = okMsg
+	s.render(w, r, "admin_timses", http.StatusOK, p)
 }
 
 func (s *Server) adminTimsesCreate(w http.ResponseWriter, r *http.Request) {
@@ -696,14 +712,14 @@ func (s *Server) adminTimsesCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := fmt.Sprintf("Timses %s dibuat.", nama)
-	v := url.Values{}
-	v.Set("ok", msg)
-	v.Set("nu", username)
+	me := userFrom(r)
+	_ = s.st.Log(me.ID, me.Username, "timses+", fmt.Sprintf("Timses %s dibuat, akun %s", nama, username))
+
+	shown := ""
 	if generated {
-		v.Set("pw", pass)
+		shown = pass
 	}
-	redirect(w, r, "/admin/timses?"+v.Encode())
+	s.renderTimses(w, r, username, shown, fmt.Sprintf("Timses %s dibuat.", nama))
 }
 
 func (s *Server) adminTimsesUpdate(w http.ResponseWriter, r *http.Request) {
@@ -735,6 +751,16 @@ func (s *Server) adminTimsesUpdate(w http.ResponseWriter, r *http.Request) {
 	if !aktif {
 		_ = s.st.DeleteSessionsByTimses(id)
 	}
+	me := userFrom(r)
+	status := "aktif"
+	if !aktif {
+		status = "nonaktif"
+	}
+	kuotaInfo := "kuota default"
+	if kuota != nil {
+		kuotaInfo = fmt.Sprintf("kuota %d", *kuota)
+	}
+	_ = s.st.Log(me.ID, me.Username, "timses~", fmt.Sprintf("Timses %s diubah (%s, %s)", nama, kuotaInfo, status))
 	redirect(w, r, "/admin/timses?ok="+url.QueryEscape("Perubahan tersimpan."))
 }
 
@@ -744,6 +770,10 @@ func (s *Server) adminTimsesDelete(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, http.StatusNotFound, "Timses tidak ditemukan.")
 		return
 	}
+	label := fmt.Sprintf("#%d", id)
+	if t, err := s.st.TimsesByID(id); err == nil {
+		label = t.Nama
+	}
 	if err := s.st.DeleteTimses(id); err != nil {
 		msg := "Gagal menghapus timses."
 		if err == store.ErrTerpakai {
@@ -752,28 +782,47 @@ func (s *Server) adminTimsesDelete(w http.ResponseWriter, r *http.Request) {
 		redirect(w, r, "/admin/timses?err="+url.QueryEscape(msg))
 		return
 	}
+	me := userFrom(r)
+	_ = s.st.Log(me.ID, me.Username, "timses-", "Timses "+label+" dihapus")
 	redirect(w, r, "/admin/timses?ok="+url.QueryEscape("Timses dihapus."))
 }
 
-func (s *Server) adminUsers(w http.ResponseWriter, r *http.Request) {
+func (s *Server) adminUsersPage(r *http.Request, newUser, newPass string) (*AdminUsersPage, error) {
 	users, err := s.st.ListUsers()
 	if err != nil {
-		s.fail(w, r, http.StatusInternalServerError, "Gagal memuat data.")
-		return
+		return nil, err
 	}
 	list, err := s.st.ListTimses()
 	if err != nil {
-		s.fail(w, r, http.StatusInternalServerError, "Gagal memuat data.")
-		return
+		return nil, err
 	}
 	u := userFrom(r)
 	b := s.base(r)
 	b.Title = "Akun"
-	s.render(w, r, "admin_users", http.StatusOK, AdminUsersPage{
+	return &AdminUsersPage{
 		Base: b, Users: users, TimsesList: list,
-		NewUser: r.URL.Query().Get("nu"), NewPass: r.URL.Query().Get("pw"),
+		NewUser: newUser, NewPass: newPass,
 		SelfID: u.ID,
-	})
+	}, nil
+}
+
+func (s *Server) adminUsers(w http.ResponseWriter, r *http.Request) {
+	p, err := s.adminUsersPage(r, "", "")
+	if err != nil {
+		s.fail(w, r, http.StatusInternalServerError, "Gagal memuat data.")
+		return
+	}
+	s.render(w, r, "admin_users", http.StatusOK, p)
+}
+
+func (s *Server) renderUsers(w http.ResponseWriter, r *http.Request, newUser, newPass, okMsg string) {
+	p, err := s.adminUsersPage(r, newUser, newPass)
+	if err != nil {
+		s.fail(w, r, http.StatusInternalServerError, "Gagal memuat data.")
+		return
+	}
+	p.OK = okMsg
+	s.render(w, r, "admin_users", http.StatusOK, p)
 }
 
 func (s *Server) adminUsersCreate(w http.ResponseWriter, r *http.Request) {
@@ -812,6 +861,7 @@ func (s *Server) adminUsersCreate(w http.ResponseWriter, r *http.Request) {
 		redirect(w, r, "/admin/users?err="+url.QueryEscape("Gagal membuat akun."))
 		return
 	}
+	me := userFrom(r)
 	if _, err := s.st.CreateUser(username, hash, role, tid, true); err != nil {
 		msg := "Gagal membuat akun."
 		if err == store.ErrUsername {
@@ -821,13 +871,17 @@ func (s *Server) adminUsersCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	v := url.Values{}
-	v.Set("ok", "Akun "+username+" dibuat.")
-	v.Set("nu", username)
-	if generated {
-		v.Set("pw", pass)
+	scope := "admin"
+	if role == "timses" {
+		scope = "timses"
 	}
-	redirect(w, r, "/admin/users?"+v.Encode())
+	_ = s.st.Log(me.ID, me.Username, "akun+", fmt.Sprintf("Akun %s dibuat (%s)", username, scope))
+
+	shown := ""
+	if generated {
+		shown = pass
+	}
+	s.renderUsers(w, r, username, shown, "Akun "+username+" dibuat.")
 }
 
 func (s *Server) adminUserReset(w http.ResponseWriter, r *http.Request) {
@@ -836,28 +890,39 @@ func (s *Server) adminUserReset(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, http.StatusNotFound, "Akun tidak ditemukan.")
 		return
 	}
-	u, err := s.st.UserByID(id)
+	me := userFrom(r)
+	target, err := s.st.UserByID(id)
 	if err != nil {
 		s.fail(w, r, http.StatusNotFound, "Akun tidak ditemukan.")
 		return
 	}
+
 	pass := auth.RandomPassword()
 	hash, err := auth.HashPassword(pass)
 	if err != nil {
 		redirect(w, r, "/admin/users?err="+url.QueryEscape("Gagal membuat password baru."))
 		return
 	}
-	if err := s.st.SetPassword(id, hash, true); err != nil {
+
+	self := id == me.ID
+	// Untuk akun sendiri: sesi TIDAK dicabut dan tidak dipaksa ganti lagi,
+	// supaya admin tidak terkunci dari perangkat yang sedang dipakai.
+	if err := s.st.SetPassword(id, hash, !self); err != nil {
 		redirect(w, r, "/admin/users?err="+url.QueryEscape("Gagal menyimpan password."))
 		return
 	}
-	_ = s.st.DeleteSessionsByUser(id)
+	if !self {
+		_ = s.st.DeleteSessionsByUser(id)
+		_ = s.st.Log(me.ID, me.Username, "reset", "Password akun "+target.Username+" direset")
+	} else {
+		_ = s.st.Log(me.ID, me.Username, "reset", "Password akun sendiri direset")
+	}
 
-	v := url.Values{}
-	v.Set("ok", "Password baru untuk "+u.Username+".")
-	v.Set("nu", u.Username)
-	v.Set("pw", pass)
-	redirect(w, r, "/admin/users?"+v.Encode())
+	msg := ""
+	if self {
+		msg = "Password akun Anda diganti. Anda tetap login di perangkat ini."
+	}
+	s.renderUsers(w, r, target.Username, pass, msg)
 }
 
 func (s *Server) adminUserToggle(w http.ResponseWriter, r *http.Request) {
@@ -889,6 +954,11 @@ func (s *Server) adminUserToggle(w http.ResponseWriter, r *http.Request) {
 	if u.Aktif {
 		_ = s.st.DeleteSessionsByUser(id)
 	}
+	status := "diaktifkan"
+	if u.Aktif {
+		status = "dinonaktifkan"
+	}
+	_ = s.st.Log(me.ID, me.Username, "akun~", "Akun "+u.Username+" "+status)
 	redirect(w, r, "/admin/users?ok="+url.QueryEscape("Status akun diperbarui."))
 }
 
@@ -898,7 +968,12 @@ func (s *Server) adminUserLogout(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, http.StatusNotFound, "Akun tidak ditemukan.")
 		return
 	}
+	me := userFrom(r)
+	target, _ := s.st.UserByID(id)
 	_ = s.st.DeleteSessionsByUser(id)
+	if target != nil {
+		_ = s.st.Log(me.ID, me.Username, "akun~", "Semua sesi akun "+target.Username+" dicabut")
+	}
 	redirect(w, r, "/admin/users?ok="+url.QueryEscape("Semua sesi akun itu dicabut."))
 }
 
@@ -932,6 +1007,7 @@ func (s *Server) adminUserDelete(w http.ResponseWriter, r *http.Request) {
 		redirect(w, r, "/admin/users?err="+url.QueryEscape("Gagal menghapus akun."))
 		return
 	}
+	_ = s.st.Log(me.ID, me.Username, "akun-", "Akun "+u.Username+" dihapus")
 	redirect(w, r, "/admin/users?ok="+url.QueryEscape("Akun dihapus."))
 }
 
@@ -1109,15 +1185,19 @@ func (s *Server) adminDusunDelete(w http.ResponseWriter, r *http.Request) {
 func (s *Server) adminKunci(w http.ResponseWriter, r *http.Request) {
 	cfg := s.st.Config()
 	next := "1"
+	aksi := "kunci"
 	msg := "Data dikunci. Timses tidak bisa menambah atau mengubah data."
 	if cfg.Terkunci {
 		next = "0"
+		aksi = "buka"
 		msg = "Kunci dibuka. Timses bisa mengubah data lagi."
 	}
 	if err := s.st.SetSetting("data_terkunci", next); err != nil {
 		redirect(w, r, "/admin/pengaturan?err="+url.QueryEscape("Gagal mengubah status kunci."))
 		return
 	}
+	me := userFrom(r)
+	_ = s.st.Log(me.ID, me.Username, aksi, "Status kunci data diubah")
 	redirect(w, r, "/admin/pengaturan?ok="+url.QueryEscape(msg))
 }
 

@@ -374,5 +374,39 @@ func funcMap() template.FuncMap {
 			}
 			return string(r[:n]) + "…"
 		},
+		"tagClass": func(a string) string {
+			switch a {
+			case "tambah", "akun+", "timses+", "buka":
+				return "tambah"
+			case "ubah", "akun~", "timses~", "reset":
+				return "ubah"
+			case "hapus", "akun-", "timses-", "kunci":
+				return "hapus"
+			}
+			return ""
+		},
+		"tagLabel": func(a string) string {
+			switch a {
+			case "akun+":
+				return "akun baru"
+			case "akun~":
+				return "akun diubah"
+			case "akun-":
+				return "akun dihapus"
+			case "timses+":
+				return "timses baru"
+			case "timses~":
+				return "timses diubah"
+			case "timses-":
+				return "timses dihapus"
+			case "reset":
+				return "reset password"
+			case "kunci":
+				return "kunci data"
+			case "buka":
+				return "buka kunci"
+			}
+			return a
+		},
 	}
 }

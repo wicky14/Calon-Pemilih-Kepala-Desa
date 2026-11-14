@@ -3,7 +3,7 @@
   {{range .Entries}}
   <div class="audrow">
     <div class="row between">
-      <span class="tag {{.Aksi}}">{{.Aksi}}</span>
+      <span class="tag {{tagClass .Aksi}}">{{tagLabel .Aksi}}</span>
       <span class="muted small">{{tanggal .At}} · {{.Username}}</span>
     </div>
     <div class="small mt4">{{.Ringkas}}</div>

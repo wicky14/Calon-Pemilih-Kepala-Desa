@@ -486,6 +486,13 @@ type AuditEntry struct {
 	Ringkas  string
 }
 
+// Log mencatat aksi administratif (bukan perubahan data pemilih).
+func (s *Store) Log(userID int64, username, aksi, ringkas string) error {
+	_, err := s.DB.Exec(`INSERT INTO audit_log(at,user_id,username,aksi,voter_id,ringkas)
+		VALUES(?,?,?,?,NULL,?)`, Now(), userID, username, aksi, ringkas)
+	return err
+}
+
 func (s *Store) ListAudit(limit int) ([]AuditEntry, error) {
 	rows, err := s.DB.Query(`SELECT id, at, COALESCE(username,''), aksi, COALESCE(voter_id,0), ringkas
 		FROM audit_log ORDER BY id DESC LIMIT ?`, limit)

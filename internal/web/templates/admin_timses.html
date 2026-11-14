@@ -1,9 +1,13 @@
 {{define "content"}}
 {{if .NewPass}}
 <div class="alert ok">
-  <div>
-    <strong>Akun {{.NewUser}}</strong> · password: <code class="pw">{{.NewPass}}</code><br>
-    <span class="small">Catat dan berikan ke petugas sekarang. Password ini tidak ditampilkan lagi.</span>
+  <div class="grow">
+    <div class="row between">
+      <strong>Akun {{.NewUser}}</strong>
+      <button type="button" class="btn ghost sm" data-copy="{{.NewPass}}">Salin</button>
+    </div>
+    <code class="pw mt8">{{.NewPass}}</code>
+    <p class="small mt8 mb0">Catat dan berikan ke koordinator timses sekarang. Password ini tidak ditampilkan lagi.</p>
   </div>
 </div>
 {{end}}

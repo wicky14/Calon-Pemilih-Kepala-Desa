@@ -35,7 +35,7 @@
 <div class="card list-flat">
 {{range .Audit}}
   <div class="actrow">
-    <span class="tag {{.Aksi}}">{{.Aksi}}</span>
+    <span class="tag {{tagClass .Aksi}}">{{tagLabel .Aksi}}</span>
     <span class="small grow">{{potong .Ringkas 70}}</span>
     <span class="muted small nowrap">{{.Username}}</span>
   </div>
