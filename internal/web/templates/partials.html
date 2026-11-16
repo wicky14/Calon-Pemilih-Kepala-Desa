@@ -1,5 +1,10 @@
 {{define "csrf"}}<input type="hidden" name="csrf" value="{{.CSRF}}">{{end}}
 
+{{define "passtoggle"}}<button class="eye" type="button" data-pass-toggle aria-pressed="false" aria-label="Tampilkan password">
+          <span class="i-on">{{icon "eye"}}</span>
+          <span class="i-off">{{icon "eyeoff"}}</span>
+        </button>{{end}}
+
 {{define "adminnav"}}
 <nav class="adminnav">
   <a href="/admin" class="{{if eq .Path "/admin"}}on{{end}}">{{icon "list"}}<span>Dashboard</span></a>

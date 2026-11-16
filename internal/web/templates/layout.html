@@ -68,6 +68,22 @@ document.addEventListener('click', function (e) {
   try { document.execCommand('copy'); done(); } catch (err) {}
   document.body.removeChild(ta);
 });
+
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-pass-toggle]');
+  if (!b) return;
+  e.preventDefault();
+  var field = b.closest('.passfield');
+  var input = field && field.querySelector('input');
+  if (!input) return;
+  var show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  b.setAttribute('aria-pressed', show ? 'true' : 'false');
+  b.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+  input.focus();
+  var end = input.value.length;
+  try { input.setSelectionRange(end, end); } catch (err) {}
+});
 </script>
 </body>
 </html>{{end}}
